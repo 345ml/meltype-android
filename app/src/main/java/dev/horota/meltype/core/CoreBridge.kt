@@ -4,6 +4,7 @@ package dev.horota.meltype.core
 import android.system.ErrnoException
 import android.system.Os
 import android.util.Log
+import dev.horota.meltype.settings.LearningData
 import java.io.File
 
 sealed interface CoreOpenResult {
@@ -24,6 +25,7 @@ class CoreBridge private constructor(private val handle: Long) : CoreApi {
          */
         @Synchronized
         fun open(dataDir: File, helper: File): CoreOpenResult {
+            if (LearningData.applyPendingClear(dataDir)) Log.i(TAG, "学習データを消しました")
             if (loaded == null) loaded = loadOnce(dataDir)
             if (loaded != true) return CoreOpenResult.Failed("libMeltypeNative.so を読み込めませんでした")
             val mozc = NativeCore.initMozc(helper.path.toCString(), File(dataDir, "mozc").path.toCString()) == 1
