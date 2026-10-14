@@ -15,4 +15,6 @@ interface CoreApi {
     fun setDirect(direct: Boolean)
     fun setCodeInput(enabled: Boolean)
     fun setCanDelete(canDelete: Boolean)
+    /** 入力を覚えないように求める入力欄 (シークレットタブなど)。入力は動かして、学習だけ止める。 */
+    fun setPrivate(enabled: Boolean)
 }

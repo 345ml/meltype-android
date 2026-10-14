@@ -2,13 +2,20 @@
 package dev.horota.meltype.input
 
 import android.text.InputType
+import android.view.inputmethod.EditorInfo
 
 /**
  * 入力欄ごとの動き。
  * bypass: Meltype を通さずキーをすべてアプリに渡す (学習もしない)。
  * startDirect: 英数 (直接入力) から始める。codeInput: 本家のコード入力モード (meltype_set_code_input)。
+ * noLearning: 入力は動かして学習だけ止める (meltype_set_private)。
  */
-data class FieldPolicy(val bypass: Boolean, val startDirect: Boolean, val codeInput: Boolean)
+data class FieldPolicy(
+    val bypass: Boolean,
+    val startDirect: Boolean,
+    val codeInput: Boolean,
+    val noLearning: Boolean = false,
+)
 
 object EditorPolicy {
     /** 最初から入れておくコード入力のアプリ (設定画面で変えられる)。 */
@@ -19,7 +26,13 @@ object EditorPolicy {
 
     private val BYPASS = FieldPolicy(bypass = true, startDirect = true, codeInput = false)
 
-    fun of(inputType: Int, packageName: String?, codeApps: Set<String>): FieldPolicy {
+    /** imeOptions は EditorInfo.imeOptions。IME_FLAG_NO_PERSONALIZED_LEARNING (シークレットタブなど) なら学習しない。 */
+    fun of(inputType: Int, packageName: String?, codeApps: Set<String>, imeOptions: Int = 0): FieldPolicy =
+        fieldPolicy(inputType, packageName, codeApps).let { policy ->
+            if (imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0) policy.copy(noLearning = true) else policy
+        }
+
+    private fun fieldPolicy(inputType: Int, packageName: String?, codeApps: Set<String>): FieldPolicy {
         val inputClass = inputType and InputType.TYPE_MASK_CLASS
         val variation = inputType and InputType.TYPE_MASK_VARIATION
         val codeApp = packageName != null && packageName in codeApps

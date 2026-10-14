@@ -1,0 +1,19 @@
+# Meltype for Android: meltype_mozc_helper を Android arm64 向けにビルドする。
+# Mozc の libmozc.so (android/jni) と同じく、対象だけを arm64 の platform に切り替える
+# (ビルド中に動かす道具はホスト向けのまま)。mozc/build.sh が Mozc の src/meltype/BUILD.bazel に置く。
+load("//android/jni:cross_build_binary.bzl", "cross_build_binary")
+
+platform(
+    name = "arm64-v8a",
+    constraint_values = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:android",
+    ],
+)
+
+cross_build_binary(
+    name = "meltype_mozc_helper.arm64",
+    cpu = "arm64-v8a",
+    platform = ":arm64-v8a",
+    target = "//converter:meltype_mozc_helper",
+)

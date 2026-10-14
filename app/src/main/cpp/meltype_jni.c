@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// JNI の橋渡し: Kotlin (NativeCore) ↔ libMeltypeNative.so (本家 Meltype.Mac.Native の C ABI)。
+// JNI の橋渡し: Kotlin (NativeCore) ↔ libMeltypeNative.so (本家 Meltype.Mac.Native の C ABI + core-native/AndroidExports.cs)。
 // libMeltypeNative.so にはリンクせず dlopen する (読み込めないときに IME ごと落とさず、Kotlin 側でエラーにするため)。
 // 文字列は Kotlin 側で UTF-8 の NUL 終端 ByteArray にして渡す (JNI の modified UTF-8 は絵文字を壊すため)。
 #include <android/log.h>
@@ -31,6 +31,7 @@ static struct {
     set_flag_fn set_direct;
     set_flag_fn set_code_input;
     set_flag_fn set_can_delete;
+    set_flag_fn set_private;
     string_fn version;
     free_fn free_text;
 } core;
@@ -61,6 +62,7 @@ Java_dev_horota_meltype_core_NativeCore_load(JNIEnv *env, jobject thiz) {
         && load_symbol(lib, (void **)&core.set_direct, "meltype_set_direct")
         && load_symbol(lib, (void **)&core.set_code_input, "meltype_set_code_input")
         && load_symbol(lib, (void **)&core.set_can_delete, "meltype_set_can_delete")
+        && load_symbol(lib, (void **)&core.set_private, "meltype_set_private")
         && load_symbol(lib, (void **)&core.version, "meltype_version")
         && load_symbol(lib, (void **)&core.free_text, "meltype_free");
     return ok ? JNI_TRUE : JNI_FALSE;
@@ -146,6 +148,11 @@ Java_dev_horota_meltype_core_NativeCore_setCodeInput(JNIEnv *env, jobject thiz, 
 JNIEXPORT void JNICALL
 Java_dev_horota_meltype_core_NativeCore_setCanDelete(JNIEnv *env, jobject thiz, jlong handle, jboolean on) {
     core.set_can_delete(session(handle), on ? 1 : 0);
+}
+
+JNIEXPORT void JNICALL
+Java_dev_horota_meltype_core_NativeCore_setPrivate(JNIEnv *env, jobject thiz, jlong handle, jboolean on) {
+    core.set_private(session(handle), on ? 1 : 0);
 }
 
 JNIEXPORT jbyteArray JNICALL

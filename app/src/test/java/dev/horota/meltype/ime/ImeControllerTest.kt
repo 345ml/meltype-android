@@ -31,6 +31,15 @@ class ImeControllerTest {
     }
 
     @Test
+    fun privateFieldTellsCoreNotToLearn() {
+        controller.startInput(FieldPolicy(bypass = false, startDirect = false, codeInput = false, noLearning = true))
+        assertTrue("private:true" in core.calls)
+        core.calls.clear()
+        controller.startInput(text)
+        assertTrue("private:false" in core.calls)
+    }
+
+    @Test
     fun letterGoesToCoreWithSurroundingText() {
         controller.startInput(text)
         editor.before = "hello "

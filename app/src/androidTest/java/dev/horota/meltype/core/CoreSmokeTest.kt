@@ -26,6 +26,24 @@ class CoreSmokeTest {
         val ready = opened as CoreOpenResult.Ready
         assertTrue("Mozc が使えない", ready.mozcAvailable)
         core = ready.core
+        waitForMozc()
+    }
+
+    /**
+     * 本家 MozcConverter はヘルパーを裏で起動し、READY の前の変換はひらがなのまま返す (入力を待たせないため)。
+     * 「きょう」が漢字になるまで待つ (最大 30 秒)。
+     */
+    private fun waitForMozc() {
+        val deadline = System.currentTimeMillis() + 30_000
+        while (System.currentTimeMillis() < deadline) {
+            for (c in "kyou") core.handleKey(c.uppercaseChar().code, c.code, 0, null, null)
+            val converted = core.handleKey(0x20, 0x20, 0, null, null)?.view?.text
+            core.handleKey(0x1B, 0, 0, null, null) // Esc: 変換を取り消す
+            core.handleKey(0x1B, 0, 0, null, null) // Esc: 入力を取り消す
+            if (converted != null && converted != "きょう") return
+            Thread.sleep(500)
+        }
+        throw AssertionError("Mozc の準備が 30 秒でできなかった")
     }
 
     /** 入力欄の代わり。deleteBefore と text を順に反映する。 */

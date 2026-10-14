@@ -3,7 +3,7 @@
 FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0-noble
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends unzip curl git python3 patchelf file ca-certificates \
+ && apt-get install -y --no-install-recommends unzip curl git python3 patchelf file ca-certificates clang lld build-essential \
  && rm -rf /var/lib/apt/lists/*
 
 ARG NDK_VERSION=r27b

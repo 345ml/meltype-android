@@ -50,7 +50,7 @@ class MeltypeImeService : InputMethodService() {
     override fun onStartInput(attribute: EditorInfo, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
         controller.options = prefs.bindingOptions
-        controller.startInput(EditorPolicy.of(attribute.inputType, attribute.packageName, prefs.codeApps))
+        controller.startInput(EditorPolicy.of(attribute.inputType, attribute.packageName, prefs.codeApps, attribute.imeOptions))
         setCandidatesViewShown(true)
     }
 

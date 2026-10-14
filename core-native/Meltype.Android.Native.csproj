@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Android 版の入力の本体のライブラリ (libMeltypeNative.so)。本家の Meltype.Mac.Native と同じ C ABI に、
+    Android 版で使う関数 (AndroidExports.cs) を足したもの。本家のファイルは変えずに、Exports.cs をそのまま取り込む。
+    AssemblyName は本家 Meltype.Core の InternalsVisibleTo に合わせて MeltypeNative にする。
+    ビルドは core-native/build.sh (NativeAOT, linux-bionic-arm64)。
+  -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>MeltypeNative</AssemblyName>
+    <RootNamespace>Meltype.Android</RootNamespace>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- 本家 Meltype.Mac.Native と同じ (NativeAOT で設定・学習データの JSON を読み書きするため。本家 issue #151) -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Meltype.Core" />
+    <!-- Android は lib*.so の名前と SONAME で読み込む。patchelf で後から書き換えると bionic が読めなくなるので、リンク時に付ける -->
+    <LinkerArg Include="-Wl,-soname,libMeltypeNative.so" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../upstream/src/Meltype.Mac.Native/Exports.cs" Link="Upstream/Exports.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../upstream/src/Meltype.Core/Meltype.Core.csproj" />
+  </ItemGroup>
+</Project>

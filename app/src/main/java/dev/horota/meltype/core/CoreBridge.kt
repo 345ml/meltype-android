@@ -20,13 +20,14 @@ class CoreBridge private constructor(private val handle: Long) : CoreApi {
         private var loaded: Boolean? = null
 
         /**
-         * Core を読み込んで入力の本体を作る。dataDir は設定・学習の保存場所、helper は libmozc_helper.so のパス。
+         * Core を読み込んで入力の本体を作る。dataDir は設定・学習の保存場所、helper は libmozc_helper.so のパス
+         * (辞書データ libmozc_data.so も同じ場所にある)。
          * Mozc が使えなくても Ready (ひらがなのまま確定できる) を返し、mozcAvailable を false にする。
          */
         @Synchronized
         fun open(dataDir: File, helper: File): CoreOpenResult {
             if (LearningData.applyPendingClear(dataDir)) Log.i(TAG, "学習データを消しました")
-            if (loaded == null) loaded = loadOnce(dataDir)
+            if (loaded == null) loaded = loadOnce(dataDir, helper)
             if (loaded != true) return CoreOpenResult.Failed("libMeltypeNative.so を読み込めませんでした")
             val mozc = NativeCore.initMozc(helper.path.toCString(), File(dataDir, "mozc").path.toCString()) == 1
             if (!mozc) Log.w(TAG, "Mozc を使えません (漢字変換はひらがなのままになります)")
@@ -35,11 +36,14 @@ class CoreBridge private constructor(private val handle: Long) : CoreApi {
             return CoreOpenResult.Ready(CoreBridge(handle), mozc)
         }
 
-        private fun loadOnce(dataDir: File): Boolean =
+        private fun loadOnce(dataDir: File, helper: File): Boolean =
             try {
                 dataDir.mkdirs()
                 // 本家 AppPaths は最初に使われたときに MELTYPE_DATA_DIR を読む。Core を読み込む前に設定する。
                 Os.setenv("MELTYPE_DATA_DIR", dataDir.path, true)
+                // Mozc のヘルパーは辞書データ (mozc.data) をこのファイルから読む (mozc/android_helper.py)。
+                // ヘルパーは子プロセスなので、この環境変数を受け継ぐ。
+                Os.setenv("MELTYPE_MOZC_DATA", File(helper.parentFile, "libmozc_data.so").path, true)
                 System.loadLibrary("MeltypeNative")
                 System.loadLibrary("meltype_jni")
                 NativeCore.load()
@@ -66,6 +70,8 @@ class CoreBridge private constructor(private val handle: Long) : CoreApi {
     override fun setCodeInput(enabled: Boolean) = NativeCore.setCodeInput(handle, enabled)
 
     override fun setCanDelete(canDelete: Boolean) = NativeCore.setCanDelete(handle, canDelete)
+
+    override fun setPrivate(enabled: Boolean) = NativeCore.setPrivate(handle, enabled)
 
     fun version(): String? = NativeCore.version()?.toString(Charsets.UTF_8)
 

@@ -56,6 +56,7 @@ class ImeController(
         consumedDown.clear()
         core?.setCanDelete(true)
         core?.setCodeInput(policy.codeInput)
+        core?.setPrivate(policy.noLearning)
         direct = policy.startDirect || userDirect
         core?.setDirect(direct)
         status.showMode(mode)

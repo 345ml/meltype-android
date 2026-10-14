@@ -21,4 +21,5 @@ class FakeCore : CoreApi {
     override fun setDirect(direct: Boolean) { calls += "direct:$direct" }
     override fun setCodeInput(enabled: Boolean) { calls += "code:$enabled" }
     override fun setCanDelete(canDelete: Boolean) { calls += "canDelete:$canDelete" }
+    override fun setPrivate(enabled: Boolean) { calls += "private:$enabled" }
 }

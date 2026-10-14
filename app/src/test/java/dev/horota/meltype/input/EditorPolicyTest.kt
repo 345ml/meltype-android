@@ -2,6 +2,7 @@
 package dev.horota.meltype.input
 
 import android.text.InputType
+import android.view.inputmethod.EditorInfo
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -55,5 +56,19 @@ class EditorPolicyTest {
     @Test
     fun defaultCodeAppsIncludeTermux() {
         assertEquals(true, "com.termux" in EditorPolicy.DEFAULT_CODE_APPS)
+    }
+
+    @Test
+    fun noPersonalizedLearningKeepsMeltypeButStopsLearning() {
+        // Chrome のシークレットタブなど。本家 Windows 版のシークレット / InPrivate と同じく、動かすが覚えない
+        assertEquals(
+            FieldPolicy(bypass = false, startDirect = false, codeInput = false, noLearning = true),
+            EditorPolicy.of(InputType.TYPE_CLASS_TEXT, "com.android.chrome", codeApps, EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING),
+        )
+    }
+
+    @Test
+    fun learningAllowedByDefault() {
+        assertEquals(false, EditorPolicy.of(InputType.TYPE_CLASS_TEXT, "com.example", codeApps, EditorInfo.IME_ACTION_SEARCH).noLearning)
     }
 }

@@ -14,5 +14,6 @@ internal object NativeCore {
     external fun setDirect(handle: Long, on: Boolean)
     external fun setCodeInput(handle: Long, on: Boolean)
     external fun setCanDelete(handle: Long, on: Boolean)
+    external fun setPrivate(handle: Long, on: Boolean)
     external fun version(): ByteArray?
 }
