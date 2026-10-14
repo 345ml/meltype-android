@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<input-method xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 物理キーボードの配列 (JIS / US) は、この subtype ごとに Android の設定で選べる -->
+    <subtype
+        android:label="@string/subtype_ja"
+        android:imeSubtypeLocale="ja_JP"
+        android:languageTag="ja-JP"
+        android:imeSubtypeMode="keyboard" />
+</input-method>
