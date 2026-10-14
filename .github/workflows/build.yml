@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build image
+        run: docker build --platform linux/amd64 -t meltype-build docker
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: build/bazel-cache
+          key: bazel-${{ hashFiles('upstream/native/mozc/MOZC_COMMIT') }}
+      - name: Core (NativeAOT)
+        run: docker/run.sh core-native/build.sh
+      - name: Mozc helper
+        run: docker/run.sh env MOZC_BAZEL_FLAGS="--disk_cache=/work/build/bazel-cache ${MOZC_BAZEL_FLAGS:-}" mozc/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native
+          path: |
+            build/jniLibs
+            build/notices
+
+  app:
+    needs: native
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/download-artifact@v4
+        with:
+          name: native
+          path: build
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager "ndk;27.1.12297006"
+      - name: Unit tests
+        run: ./gradlew :app:testDebugUnitTest
+      - name: Decode keystore
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo "${{ secrets.MELTYPE_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+      - name: Build APK
+        env:
+          MELTYPE_KEYSTORE: ${{ startsWith(github.ref, 'refs/tags/v') && format('{0}/release.jks', runner.temp) || '' }}
+          MELTYPE_KEYSTORE_PASSWORD: ${{ secrets.MELTYPE_KEYSTORE_PASSWORD }}
+          MELTYPE_KEY_ALIAS: ${{ secrets.MELTYPE_KEY_ALIAS }}
+          MELTYPE_KEY_PASSWORD: ${{ secrets.MELTYPE_KEY_PASSWORD }}
+        run: |
+          if [ -z "$MELTYPE_KEYSTORE" ]; then unset MELTYPE_KEYSTORE; fi
+          ./gradlew :app:assembleRelease
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk "meltype-${GITHUB_REF_NAME}.apk"
+          gh release create "$GITHUB_REF_NAME" "meltype-${GITHUB_REF_NAME}.apk" --draft --title "Meltype for Android $GITHUB_REF_NAME"

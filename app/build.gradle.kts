@@ -21,6 +21,23 @@ android {
         externalNativeBuild { cmake { arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON" } }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystore = System.getenv("MELTYPE_KEYSTORE")
+            if (keystore != null) {
+                storeFile = file(keystore)
+                storePassword = System.getenv("MELTYPE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MELTYPE_KEY_ALIAS")
+                keyPassword = System.getenv("MELTYPE_KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            if (System.getenv("MELTYPE_KEYSTORE") != null) signingConfig = signingConfigs.getByName("release")
+        }
+    }
     externalNativeBuild {
         cmake { path = file("src/main/cpp/CMakeLists.txt") }
     }
