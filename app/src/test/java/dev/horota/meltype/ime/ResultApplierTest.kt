@@ -60,6 +60,27 @@ class ResultApplierTest {
     }
 
     @Test
+    fun inlineReadingIsPassedToDisplay() {
+        // Termux など、入力中の文字を描かない入力欄では、候補バーに読みを出す
+        applier.inlineReading = true
+        applier.apply(SessionResult(true, emptyList(), CompositionView(text = "めも", candidates = listOf("メモ"))))
+        assertTrue("show:メモ|reading:めも" in editor.ops)
+    }
+
+    @Test
+    fun editsAreReportedOnce() {
+        applier.apply(SessionResult(true, listOf(TextEdit(0, "a"))))
+        assertTrue(applier.takeSelfEdit())
+        assertFalse(applier.takeSelfEdit())
+    }
+
+    @Test
+    fun noEditNoSelfEdit() {
+        applier.apply(SessionResult(false, emptyList(), null))
+        assertFalse(applier.takeSelfEdit())
+    }
+
+    @Test
     fun resetForgetsComposing() {
         applier.apply(SessionResult(true, emptyList(), CompositionView(text = "か")))
         applier.reset()

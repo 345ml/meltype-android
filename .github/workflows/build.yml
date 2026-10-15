@@ -69,4 +69,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/release/app-release.apk "meltype-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" "meltype-${GITHUB_REF_NAME}.apk" --draft --title "Meltype for Android $GITHUB_REF_NAME"
+          gh release create "$GITHUB_REF_NAME" "meltype-${GITHUB_REF_NAME}.apk" THIRD-PARTY-NOTICES.md build/notices/* --draft --title "Meltype for Android $GITHUB_REF_NAME"

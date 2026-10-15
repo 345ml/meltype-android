@@ -20,4 +20,14 @@ public static class AndroidExports
     {
         if (handle != IntPtr.Zero && GCHandle.FromIntPtr(handle).Target is MeltypeSession session) session.Private = enabled != 0;
     }
+
+    /// <summary>
+    /// Meltype の外でキャレットが動いた (アプリに渡したキー・タップで別の場所に動かした) とき。
+    /// 前に確定した語を、次の語の文脈で確定し直さないようにする (MeltypeSession.ForgetLastCommit)。
+    /// </summary>
+    [UnmanagedCallersOnly(EntryPoint = "meltype_forget_last_commit")]
+    public static void ForgetLastCommit(IntPtr handle)
+    {
+        if (handle != IntPtr.Zero && GCHandle.FromIntPtr(handle).Target is MeltypeSession session) session.ForgetLastCommit();
+    }
 }

@@ -13,6 +13,7 @@
 typedef int (*init_mozc_fn)(const char *, const char *);
 typedef void *(*create_fn)(void);
 typedef void (*destroy_fn)(void *);
+typedef void (*session_void_fn)(void *);
 typedef char *(*handle_key_fn)(void *, int, int, int, const char *, const char *);
 typedef char *(*session_int_fn)(void *, int);
 typedef char *(*session_fn)(void *);
@@ -32,6 +33,7 @@ static struct {
     set_flag_fn set_code_input;
     set_flag_fn set_can_delete;
     set_flag_fn set_private;
+    session_void_fn forget_last_commit;
     string_fn version;
     free_fn free_text;
 } core;
@@ -63,6 +65,7 @@ Java_dev_horota_meltype_core_NativeCore_load(JNIEnv *env, jobject thiz) {
         && load_symbol(lib, (void **)&core.set_code_input, "meltype_set_code_input")
         && load_symbol(lib, (void **)&core.set_can_delete, "meltype_set_can_delete")
         && load_symbol(lib, (void **)&core.set_private, "meltype_set_private")
+        && load_symbol(lib, (void **)&core.forget_last_commit, "meltype_forget_last_commit")
         && load_symbol(lib, (void **)&core.version, "meltype_version")
         && load_symbol(lib, (void **)&core.free_text, "meltype_free");
     return ok ? JNI_TRUE : JNI_FALSE;
@@ -153,6 +156,11 @@ Java_dev_horota_meltype_core_NativeCore_setCanDelete(JNIEnv *env, jobject thiz, 
 JNIEXPORT void JNICALL
 Java_dev_horota_meltype_core_NativeCore_setPrivate(JNIEnv *env, jobject thiz, jlong handle, jboolean on) {
     core.set_private(session(handle), on ? 1 : 0);
+}
+
+JNIEXPORT void JNICALL
+Java_dev_horota_meltype_core_NativeCore_forgetLastCommit(JNIEnv *env, jobject thiz, jlong handle) {
+    core.forget_last_commit(session(handle));
 }
 
 JNIEXPORT jbyteArray JNICALL

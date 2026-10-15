@@ -22,4 +22,8 @@ dotnet publish "$root/core-native/Meltype.Android.Native.csproj" -c Release -r l
 mkdir -p "$out"
 # SONAME はリンク時に libMeltypeNative.so にしてある (Meltype.Android.Native.csproj)。ファイル名を合わせる。
 cp -f "$publish/MeltypeNative.so" "$out/libMeltypeNative.so"
+# .NET ランタイム (MIT) は libMeltypeNative.so に入るので、ライセンス表記を一緒に配る (THIRD-PARTY-NOTICES.md)
+mkdir -p "$root/build/notices"
+cp -f /usr/share/dotnet/LICENSE.txt "$root/build/notices/DOTNET-LICENSE.txt"
+cp -f /usr/share/dotnet/ThirdPartyNotices.txt "$root/build/notices/DOTNET-THIRD-PARTY-NOTICES.txt"
 echo "作成しました: $out/libMeltypeNative.so"

@@ -59,6 +59,25 @@ class MeltypeImeService : InputMethodService() {
         super.onFinishInput()
     }
 
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int,
+    ) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        controller.selectionChanged(newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+    }
+
+    override fun onDestroy() {
+        controller.shutdown()
+        core?.close()
+        core = null
+        super.onDestroy()
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val key = KeyInput(keyCode, event.getUnicodeChar(event.metaState), event.getUnicodeChar(0), event.metaState)
         return controller.keyDown(key) || super.onKeyDown(keyCode, event)

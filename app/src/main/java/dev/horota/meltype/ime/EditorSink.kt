@@ -18,6 +18,7 @@ interface EditorSink {
 
 /** 候補バー。 */
 interface CandidateDisplay {
-    fun show(view: CompositionView)
+    /** inlineReading: 入力欄が未確定の文字を描かないので、候補バーに読みも出す (Termux など)。 */
+    fun show(view: CompositionView, inlineReading: Boolean)
     fun hide()
 }

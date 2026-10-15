@@ -20,6 +20,8 @@ class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
 
     private val modeLabel = label().apply { setTypeface(typeface, Typeface.BOLD) }
     private val warningLabel = label().apply { setTextColor(Color.rgb(0xC6, 0x28, 0x28)) }
+    /** 入力欄が未確定の文字を描かないときの読み (Termux など)。 */
+    private val readingLabel = label().apply { paintFlags = paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG }
     private val list = LinearLayout(context).apply { orientation = HORIZONTAL }
 
     init {
@@ -29,13 +31,15 @@ class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
         minimumHeight = dp(36)
         addView(modeLabel)
         addView(warningLabel)
+        addView(readingLabel)
         addView(HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
             addView(list)
         })
     }
 
-    override fun show(view: CompositionView) {
+    override fun show(view: CompositionView, inlineReading: Boolean) {
+        readingLabel.text = if (inlineReading) view.text else ""
         list.removeAllViews()
         val items = view.candidates.ifEmpty { view.predictions }
         val selected = if (view.candidates.isNotEmpty()) view.selectedIndex else view.selectedPrediction
@@ -49,6 +53,7 @@ class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
     }
 
     override fun hide() {
+        readingLabel.text = ""
         list.removeAllViews()
     }
 

@@ -15,5 +15,6 @@ internal object NativeCore {
     external fun setCodeInput(handle: Long, on: Boolean)
     external fun setCanDelete(handle: Long, on: Boolean)
     external fun setPrivate(handle: Long, on: Boolean)
+    external fun forgetLastCommit(handle: Long)
     external fun version(): ByteArray?
 }

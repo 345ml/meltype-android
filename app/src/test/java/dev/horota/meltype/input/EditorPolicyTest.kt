@@ -48,7 +48,7 @@ class EditorPolicyTest {
         // Termux は既定で TYPE_NULL。コード入力のアプリなら Meltype を通す
         assertEquals(FieldPolicy(bypass = true, startDirect = true, codeInput = false), of(InputType.TYPE_NULL))
         assertEquals(
-            FieldPolicy(bypass = false, startDirect = false, codeInput = true),
+            FieldPolicy(bypass = false, startDirect = false, codeInput = true, surroundingText = false),
             of(InputType.TYPE_NULL, "com.termux"),
         )
     }

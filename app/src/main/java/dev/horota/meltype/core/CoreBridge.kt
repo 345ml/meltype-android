@@ -18,6 +18,8 @@ class CoreBridge private constructor(private val handle: Long) : CoreApi {
     companion object {
         private const val TAG = "Meltype"
         private var loaded: Boolean? = null
+        /** Mozc はプロセスで 1 回だけ初期化する (やり直すと前のヘルパーの終了を UI スレッドで待つため)。 */
+        private var mozc: Boolean? = null
 
         /**
          * Core を読み込んで入力の本体を作る。dataDir は設定・学習の保存場所、helper は libmozc_helper.so のパス
@@ -29,7 +31,8 @@ class CoreBridge private constructor(private val handle: Long) : CoreApi {
             if (LearningData.applyPendingClear(dataDir)) Log.i(TAG, "学習データを消しました")
             if (loaded == null) loaded = loadOnce(dataDir, helper)
             if (loaded != true) return CoreOpenResult.Failed("libMeltypeNative.so を読み込めませんでした")
-            val mozc = NativeCore.initMozc(helper.path.toCString(), File(dataDir, "mozc").path.toCString()) == 1
+            val mozc = this.mozc ?: (NativeCore.initMozc(helper.path.toCString(), File(dataDir, "mozc").path.toCString()) == 1)
+                .also { this.mozc = it }
             if (!mozc) Log.w(TAG, "Mozc を使えません (漢字変換はひらがなのままになります)")
             val handle = NativeCore.create()
             if (handle == 0L) return CoreOpenResult.Failed("Meltype を初期化できませんでした")
@@ -72,6 +75,11 @@ class CoreBridge private constructor(private val handle: Long) : CoreApi {
     override fun setCanDelete(canDelete: Boolean) = NativeCore.setCanDelete(handle, canDelete)
 
     override fun setPrivate(enabled: Boolean) = NativeCore.setPrivate(handle, enabled)
+
+    override fun forgetLastCommit() = NativeCore.forgetLastCommit(handle)
+
+    /** 入力の本体を破棄する (IME の onDestroy)。この後は使わない。 */
+    fun close() = NativeCore.destroy(handle)
 
     fun version(): String? = NativeCore.version()?.toString(Charsets.UTF_8)
 

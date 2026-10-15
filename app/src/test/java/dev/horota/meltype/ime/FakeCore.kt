@@ -22,4 +22,5 @@ class FakeCore : CoreApi {
     override fun setCodeInput(enabled: Boolean) { calls += "code:$enabled" }
     override fun setCanDelete(canDelete: Boolean) { calls += "canDelete:$canDelete" }
     override fun setPrivate(enabled: Boolean) { calls += "private:$enabled" }
+    override fun forgetLastCommit() { calls += "forget" }
 }

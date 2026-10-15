@@ -17,6 +17,8 @@ class FakeEditor : EditorSink, CandidateDisplay {
     override fun commit(text: String) { ops += "commit:$text" }
     override fun setComposing(text: String) { ops += "composing:$text" }
     override fun finishComposing() { ops += "finish" }
-    override fun show(view: CompositionView) { ops += "show:${view.candidates.joinToString("|")}" }
+    override fun show(view: CompositionView, inlineReading: Boolean) {
+        ops += "show:${view.candidates.joinToString("|")}" + if (inlineReading) "|reading:${view.text}" else ""
+    }
     override fun hide() { ops += "hide" }
 }

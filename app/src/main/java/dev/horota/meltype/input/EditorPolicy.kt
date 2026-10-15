@@ -9,12 +9,14 @@ import android.view.inputmethod.EditorInfo
  * bypass: Meltype を通さずキーをすべてアプリに渡す (学習もしない)。
  * startDirect: 英数 (直接入力) から始める。codeInput: 本家のコード入力モード (meltype_set_code_input)。
  * noLearning: 入力は動かして学習だけ止める (meltype_set_private)。
+ * surroundingText: 入力欄がカーソルの前後の文字を返せるか。TYPE_NULL (Termux など) は常に空を返すので false。
  */
 data class FieldPolicy(
     val bypass: Boolean,
     val startDirect: Boolean,
     val codeInput: Boolean,
     val noLearning: Boolean = false,
+    val surroundingText: Boolean = true,
 )
 
 object EditorPolicy {
@@ -38,7 +40,11 @@ object EditorPolicy {
         val codeApp = packageName != null && packageName in codeApps
         if (isPassword(inputClass, variation)) return BYPASS
         if (inputClass == InputType.TYPE_NULL) {
-            return if (codeApp) FieldPolicy(bypass = false, startDirect = false, codeInput = true) else BYPASS
+            return if (codeApp) {
+                FieldPolicy(bypass = false, startDirect = false, codeInput = true, surroundingText = false)
+            } else {
+                BYPASS
+            }
         }
         val startDirect = when (inputClass) {
             InputType.TYPE_CLASS_NUMBER, InputType.TYPE_CLASS_PHONE, InputType.TYPE_CLASS_DATETIME -> true

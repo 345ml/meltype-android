@@ -73,6 +73,22 @@ class CoreSmokeTest {
     }
 
     @Test
+    fun closeThenReopenStillConverts() {
+        // IME を切り替えて戻ったとき (onDestroy → onCreate)。Mozc は初期化し直さず、そのまま使う
+        core.close()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val reopened = CoreBridge.open(
+            File(context.filesDir, "Meltype-test"),
+            File(context.applicationInfo.nativeLibraryDir, "libmozc_helper.so"),
+        )
+        assertTrue("開き直せない: $reopened", reopened is CoreOpenResult.Ready)
+        core = (reopened as CoreOpenResult.Ready).core
+        for (c in "kyou") core.handleKey(c.uppercaseChar().code, c.code, 0, null, null)
+        assertEquals("今日", core.handleKey(0x20, 0x20, 0, null, null)?.view?.text)
+        core.commit()
+    }
+
+    @Test
     fun emojiAroundCaretDoesNotBreak() {
         val result = core.handleKey('A'.code, 'a'.code, 0, "😀", "🎉")
         assertNotNull(result)

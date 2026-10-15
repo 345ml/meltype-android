@@ -43,6 +43,8 @@ android {
     }
     // Task 2 の成果物 (libMeltypeNative.so, libmozc_helper.so) を APK に入れる
     sourceSets["main"].jniLibs.srcDirs("../build/jniLibs")
+    // ライセンス表記 (設定画面の「ライセンス」)。copyNotices が作る
+    sourceSets["main"].assets.srcDirs(layout.buildDirectory.dir("generated/notices"))
     // libmozc_helper.so を実行するには、ネイティブライブラリが APK から展開されている必要がある
     packaging { jniLibs { useLegacyPackaging = true } }
 
@@ -53,6 +55,17 @@ android {
     kotlinOptions { jvmTarget = "17" }
     testOptions { unitTests.isReturnDefaultValues = true }
 }
+
+// Mozc (BSD-3-Clause) と .NET ランタイム (MIT) は、配布するバイナリにライセンス表記を付ける必要がある。
+// ファイル名は settings/Notices.kt の FILES と合わせる。build/notices は mozc/build.sh と core-native/build.sh が作る。
+val copyNotices by tasks.registering(Copy::class) {
+    into(layout.buildDirectory.dir("generated/notices/notices"))
+    from(rootProject.file("THIRD-PARTY-NOTICES.md"))
+    from(rootProject.file("LICENSE"))
+    from(rootProject.file("upstream/THIRD-PARTY-NOTICES.md")) { rename { "UPSTREAM-THIRD-PARTY-NOTICES.md" } }
+    from(rootProject.file("build/notices"))
+}
+tasks.named("preBuild") { dependsOn(copyNotices) }
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")

@@ -54,6 +54,9 @@ class SettingsActivity : Activity() {
         root.addView(button("ユーザー辞書を編集する") { startActivity(Intent(this, UserDictionaryActivity::class.java)) })
         root.addView(button("学習データを消す") { confirmClearLearning() })
 
+        root.addView(heading("このアプリについて"))
+        root.addView(button("ライセンス") { showNotices() })
+
         setContentView(ScrollView(this).apply { addView(root) })
     }
 
@@ -66,6 +69,28 @@ class SettingsActivity : Activity() {
                 Process.killProcess(Process.myPid())
             }
             .setNegativeButton("やめる", null)
+            .show()
+    }
+
+    private fun showNotices() {
+        val text = Notices.compose { name ->
+            try {
+                assets.open("notices/$name").bufferedReader().use { it.readText() }
+            } catch (e: java.io.IOException) {
+                null
+            }
+        }
+        AlertDialog.Builder(this)
+            .setTitle("ライセンス")
+            .setView(ScrollView(this).apply {
+                addView(TextView(context).apply {
+                    this.text = text
+                    textSize = 11f
+                    setTextIsSelectable(true)
+                    setPadding(32, 16, 32, 16)
+                })
+            })
+            .setPositiveButton("閉じる", null)
             .show()
     }
 

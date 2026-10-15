@@ -31,6 +31,93 @@ class ImeControllerTest {
     }
 
     @Test
+    fun fieldWithoutSurroundingTextGetsNoneAndNoRecommit() {
+        // Termux (TYPE_NULL): 周りの文字は常に空なので渡さず、Core に行を覚えさせる。確定し直しもしない
+        controller.startInput(FieldPolicy(bypass = false, startDirect = false, codeInput = true, surroundingText = false))
+        assertTrue("canDelete:false" in core.calls)
+        core.calls.clear()
+        editor.before = ""
+        controller.keyDown(letter('m'))
+        assertEquals(listOf("key:77:109:0:null:null"), core.calls)
+    }
+
+    @Test
+    fun tapOutsideCompositionFinalizesInPlace() {
+        controller.startInput(text)
+        core.next = SessionResult(true, emptyList(), CompositionView(text = "めも"))
+        controller.keyDown(letter('m'))
+        editor.ops.clear()
+        core.calls.clear()
+        core.commitResult = SessionResult(true, listOf(TextEdit(0, "めも")), null)
+
+        controller.selectionChanged(newSelStart = 0, newSelEnd = 0, candidatesStart = 5, candidatesEnd = 7)
+
+        // 入力欄の文字はその場で確定し、Core の確定結果は入れ直さない (二重にしない)
+        assertTrue("finish" in editor.ops)
+        assertFalse("commit:めも" in editor.ops)
+        assertEquals(listOf("commit", "forget"), core.calls)
+        core.calls.clear()
+        controller.keyDown(letter('a'))
+        assertEquals("before と after を読み直す", listOf("key:65:97:0:${editor.before}:${editor.after}"), core.calls)
+    }
+
+    @Test
+    fun caretAtCompositionEndIsOurOwnUpdate() {
+        controller.startInput(text)
+        core.next = SessionResult(true, emptyList(), CompositionView(text = "めも"))
+        controller.keyDown(letter('m'))
+        core.calls.clear()
+        editor.ops.clear()
+        controller.selectionChanged(newSelStart = 7, newSelEnd = 7, candidatesStart = 5, candidatesEnd = 7)
+        assertEquals(emptyList<String>(), core.calls)
+        assertFalse("finish" in editor.ops)
+    }
+
+    @Test
+    fun selectionUpdateFromOurCommitKeepsLastCommit() {
+        controller.startInput(text)
+        core.next = SessionResult(true, listOf(TextEdit(0, "今日")), null)
+        controller.keyDown(letter('a'))
+        core.calls.clear()
+        controller.selectionChanged(newSelStart = 2, newSelEnd = 2, candidatesStart = -1, candidatesEnd = -1)
+        assertEquals(emptyList<String>(), core.calls)
+    }
+
+    @Test
+    fun caretMovedByAppOrUserForgetsLastCommit() {
+        controller.startInput(text)
+        core.calls.clear()
+        controller.selectionChanged(newSelStart = 0, newSelEnd = 0, candidatesStart = -1, candidatesEnd = -1)
+        assertEquals(listOf("forget"), core.calls)
+    }
+
+    @Test
+    fun startInputForgetsHeldSym() {
+        controller.startInput(text)
+        controller.keyDown(KeyInput(KeyBindings.Q25_SYM_KEYCODE, 0, 0, 0))
+        controller.startInput(text) // Sym を押したまま別の入力欄へ (KeyUp は届かない)
+        core.calls.clear()
+        controller.keyDown(KeyInput(KeyEvent.KEYCODE_K, 'k'.code, 'k'.code, 0))
+        assertEquals(listOf("key:75:107:0::"), core.calls)
+    }
+
+    @Test
+    fun symMetaStateCountsAsHeld() {
+        controller.startInput(text)
+        core.calls.clear()
+        controller.keyDown(KeyInput(KeyEvent.KEYCODE_K, 'k'.code, 'k'.code, KeyEvent.META_SYM_ON))
+        assertEquals(listOf("key:118:0:0:null:null"), core.calls)
+    }
+
+    @Test
+    fun shutdownCommitsPending() {
+        controller.startInput(text)
+        core.commitResult = SessionResult(true, listOf(TextEdit(0, "今日")), null)
+        controller.shutdown()
+        assertTrue("commit:今日" in editor.ops)
+    }
+
+    @Test
     fun privateFieldTellsCoreNotToLearn() {
         controller.startInput(FieldPolicy(bypass = false, startDirect = false, codeInput = false, noLearning = true))
         assertTrue("private:true" in core.calls)

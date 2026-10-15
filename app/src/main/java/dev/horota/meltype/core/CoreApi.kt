@@ -17,4 +17,6 @@ interface CoreApi {
     fun setCanDelete(canDelete: Boolean)
     /** 入力を覚えないように求める入力欄 (シークレットタブなど)。入力は動かして、学習だけ止める。 */
     fun setPrivate(enabled: Boolean)
+    /** Meltype の外でカーソルが動いた (アプリに渡したキー・タップ)。前に確定した語を確定し直さない。 */
+    fun forgetLastCommit()
 }
