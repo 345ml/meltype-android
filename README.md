@@ -15,7 +15,7 @@ ashitanomeetingwotsuika  →  明日のmeetingを追加
 ## 本家 Meltype について
 
 Meltype は **雪代 / Yukishiro さん ([@yksr-melt](https://github.com/yksr-melt))** が作っている Windows 向けの日本語入力です (Mac / Linux 版もあります)。
-ローマ字の打鍵から英語と日本語を自動で見分ける、という発想と、それを支える判定ロジック・辞書は、すべて本家の成果です。この Android 版は、その仕組みを Android で動かすための「つなぎ」を書いただけです。
+ローマ字の打鍵から英語と日本語を自動で見分ける、という発想と、その判定ロジック、判定に使う辞書づくりは本家の仕事です (辞書の一部は JMdict などの公開データをもとにしています。くわしくは本家の [THIRD-PARTY-NOTICES.md](https://github.com/yksr-melt/Meltype/blob/main/THIRD-PARTY-NOTICES.md))。この Android 版は、その仕組みを Android で動かすための「つなぎ」を書いただけです。
 
 - 本家: https://github.com/yksr-melt/Meltype
 - 本家の使い方: https://github.com/yksr-melt/Meltype/blob/main/docs/USAGE.md

@@ -48,6 +48,9 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          # 既定の "tools" は SDK から消えていて失敗する
+          packages: platform-tools
       - run: sdkmanager "ndk;27.1.12297006"
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest
