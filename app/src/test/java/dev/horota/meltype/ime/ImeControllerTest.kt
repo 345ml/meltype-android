@@ -6,7 +6,6 @@ import dev.horota.meltype.core.CompositionView
 import dev.horota.meltype.core.SessionResult
 import dev.horota.meltype.core.TextEdit
 import dev.horota.meltype.input.FieldPolicy
-import dev.horota.meltype.input.KeyBindings
 import dev.horota.meltype.input.KeyInput
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -89,24 +88,6 @@ class ImeControllerTest {
         core.calls.clear()
         controller.selectionChanged(newSelStart = 0, newSelEnd = 0, candidatesStart = -1, candidatesEnd = -1)
         assertEquals(listOf("forget"), core.calls)
-    }
-
-    @Test
-    fun startInputForgetsHeldSym() {
-        controller.startInput(text)
-        controller.keyDown(KeyInput(KeyBindings.Q25_SYM_KEYCODE, 0, 0, 0))
-        controller.startInput(text) // Sym を押したまま別の入力欄へ (KeyUp は届かない)
-        core.calls.clear()
-        controller.keyDown(KeyInput(KeyEvent.KEYCODE_K, 'k'.code, 'k'.code, 0))
-        assertEquals(listOf("key:75:107:0::"), core.calls)
-    }
-
-    @Test
-    fun symMetaStateCountsAsHeld() {
-        controller.startInput(text)
-        core.calls.clear()
-        controller.keyDown(KeyInput(KeyEvent.KEYCODE_K, 'k'.code, 'k'.code, KeyEvent.META_SYM_ON))
-        assertEquals(listOf("key:118:0:0:null:null"), core.calls)
     }
 
     @Test
@@ -214,16 +195,31 @@ class ImeControllerTest {
     }
 
     @Test
-    fun symKSendsF7() {
+    fun barIsHiddenInBypassedFields() {
         controller.startInput(text)
-        controller.keyDown(KeyInput(KeyBindings.Q25_SYM_KEYCODE, 0, 0, 0))
+        assertTrue(controller.showsBar)
+        controller.startInput(FieldPolicy(bypass = true, startDirect = false, codeInput = false))
+        assertFalse(controller.showsBar)
+    }
+
+    @Test
+    fun convertButtonsSendF7AndF10() {
+        controller.startInput(text)
+        core.next = SessionResult(true, emptyList(), CompositionView(text = "キョウ"))
         core.calls.clear()
-        assertTrue(controller.keyDown(KeyInput(KeyEvent.KEYCODE_K, 'k'.code, 'k'.code, 0)))
-        assertEquals(listOf("key:118:0:0:null:null"), core.calls)
-        controller.keyUp(KeyBindings.Q25_SYM_KEYCODE)
+        controller.convert(ConvertTarget.KATAKANA)
+        controller.convert(ConvertTarget.ALPHANUMERIC)
+        assertEquals(listOf("key:118:0:0:null:null", "key:121:0:0:null:null"), core.calls)
+        assertTrue(editor.ops.any { it.contains("キョウ") })
+    }
+
+    @Test
+    fun convertDoesNothingWhilePaused() {
+        controller.startInput(text)
+        controller.keyDown(KeyInput(KeyEvent.KEYCODE_ZENKAKU_HANKAKU, 0, 0, KeyEvent.META_CTRL_ON))
         core.calls.clear()
-        controller.keyDown(KeyInput(KeyEvent.KEYCODE_K, 'k'.code, 'k'.code, 0))
-        assertEquals(listOf("key:75:107:0::"), core.calls)
+        controller.convert(ConvertTarget.KATAKANA)
+        assertEquals(emptyList<String>(), core.calls)
     }
 
     @Test

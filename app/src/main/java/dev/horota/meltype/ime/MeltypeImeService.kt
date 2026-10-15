@@ -13,7 +13,11 @@ import dev.horota.meltype.input.KeyInput
 import dev.horota.meltype.settings.MeltypePrefs
 import java.io.File
 
-/** v0.1: 物理キーボード専用。画面キーボードは出さず、候補バーだけ出す。 */
+/**
+ * v0.1: 物理キーボード専用。画面キーボードは出さず、候補バーだけ出す。
+ * Android 11 以降は、表示を頼まれていない IME の窓は見えないので、候補バーを入力用の窓 (input view) として出し、
+ * 文字を打ち始めたら自分で表示を頼む (requestShowSelf)。
+ */
 class MeltypeImeService : InputMethodService() {
     private lateinit var prefs: MeltypePrefs
     private lateinit var bar: CandidateBarView
@@ -23,7 +27,11 @@ class MeltypeImeService : InputMethodService() {
     override fun onCreate() {
         super.onCreate()
         prefs = MeltypePrefs(this)
-        bar = CandidateBarView(this) { index -> controller.selectCandidate(index) }
+        bar = CandidateBarView(
+            this,
+            onSelect = { index -> controller.selectCandidate(index) },
+            onConvert = { target -> controller.convert(target) },
+        )
         val opened = CoreBridge.open(
             MeltypePrefs.dataDirectory(this),
             File(applicationInfo.nativeLibraryDir, "libmozc_helper.so"),
@@ -38,12 +46,16 @@ class MeltypeImeService : InputMethodService() {
         controller = ImeController(core, InputConnectionSink { currentInputConnection }, bar, bar)
     }
 
-    override fun onCreateCandidatesView(): View {
+    override fun onCreateInputView(): View {
         (bar.parent as? ViewGroup)?.removeView(bar)
         return bar
     }
 
-    override fun onEvaluateInputViewShown(): Boolean = false
+    /** 物理キーボードがあっても候補バーを出す (既定では物理キーボードがあると出さない)。パスワード欄などでは出さない。 */
+    override fun onEvaluateInputViewShown(): Boolean {
+        super.onEvaluateInputViewShown()
+        return !::controller.isInitialized || controller.showsBar
+    }
 
     override fun onEvaluateFullscreenMode(): Boolean = false
 
@@ -51,7 +63,7 @@ class MeltypeImeService : InputMethodService() {
         super.onStartInput(attribute, restarting)
         controller.options = prefs.bindingOptions
         controller.startInput(EditorPolicy.of(attribute.inputType, attribute.packageName, prefs.codeApps, attribute.imeOptions))
-        setCandidatesViewShown(true)
+        updateInputViewShown()
     }
 
     override fun onFinishInput() {
@@ -80,7 +92,12 @@ class MeltypeImeService : InputMethodService() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val key = KeyInput(keyCode, event.getUnicodeChar(event.metaState), event.getUnicodeChar(0), event.metaState)
-        return controller.keyDown(key) || super.onKeyDown(keyCode, event)
+        if (controller.keyDown(key)) {
+            // 入力欄をタップせずに打ち始めたときは、まだ窓が出ていない
+            if (!isInputViewShown) requestShowSelf(0)
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean =

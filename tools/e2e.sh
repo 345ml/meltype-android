@@ -10,6 +10,13 @@ expected="今日はgoogleで検索"
 
 "$root/gradlew" -p "$root" :app:installDebug
 
+# 画面がロックされているとキーがロック画面に入り、入力欄が見つからない
+adb shell input keyevent KEYCODE_WAKEUP
+if adb shell dumpsys window | grep -q 'isKeyguardShowing=true'; then
+    echo "NG: 端末の画面がロックされています。ロックを解除してからもう一度実行してください" >&2
+    exit 1
+fi
+
 original="$(adb shell settings get secure default_input_method | tr -d '\r')"
 restore() {
     if [[ -n "$original" && "$original" != "null" ]]; then
@@ -26,7 +33,7 @@ sleep 2
 
 field_text() {
     adb shell uiautomator dump /sdcard/meltype-ui.xml > /dev/null
-    adb shell cat /sdcard/meltype-ui.xml | grep -o 'text="[^"]*"[^>]*content-desc="playground"' | head -1 | sed 's/^text="\([^"]*\)".*/\1/'
+    adb shell cat /sdcard/meltype-ui.xml | { grep -o 'text="[^"]*"[^>]*content-desc="playground"' || true; } | head -1 | sed 's/^text="\([^"]*\)".*/\1/'
 }
 
 clear_field() {

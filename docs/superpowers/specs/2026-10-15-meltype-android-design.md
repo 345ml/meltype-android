@@ -112,15 +112,15 @@ Q25 (BlackBerry 配列) と外付けキーボードの両方の割り当てを�
 | 動作 | 外付け (JIS / US) | Q25 (BlackBerry 配列) |
 |---|---|---|
 | 英 / 日の切り替え (`meltype_set_direct`) | 半角/全角, Ctrl+Space | Shift+Space |
-| カタカナに変換 | F7 (Core が処理) | spike で決める (候補: Sym+K)。決まるまでは候補バーのカタカナ候補を選ぶ |
-| 英数に変換 | F10 (Core が処理) | spike で決める (候補: Sym+E)。決まるまでは候補バーの英数候補を選ぶ |
+| カタカナに変換 | F7 (Core が処理) | 候補バーの「カナ」ボタン |
+| 英数に変換 | F10 (Core が処理) | 候補バーの「英数」ボタン |
 | 変換 / 無変換 / かな | `meltype_role_key` | なし |
 | 候補を選ぶ | ↑↓←→ / Space | トラックパッド (DPAD) / Space |
 | 一時停止 (Meltype を通さない) | Ctrl+半角/全角 | なし (設定画面から) |
 
 - Alt+文字 で数字や記号を打つ Q25 の動きは、`KeyCharacterMap` が返す文字をそのまま Core に渡して保つ。BlackBerry 配列では Alt+E などが数字になるので、Alt+文字 は Meltype の割り当てに使わない (`3ji` → 3時 のような入力を壊さないため)。
-- F7 / F10 に当たる Q25 のキーは、Sym キーが KeyEvent として IME に届くかどうか次第なので、spike の結果で決める。届かなければ候補バーで代わりにする。
-- 実際のキーコード (特に Alt, Sym, トラックパッド) は spike で Q25 の実機を測ってから決める。上の表の Q25 列は仮。
+- Q25 の Sym は右 Alt (`KEYCODE_ALT_RIGHT`) として届き、Key Mapper などのアプリが Sym+文字 を使っていることがあるため、Meltype は割り当てない。F7 / F10 は候補バーのボタンで代わりにする (入力中だけ出す)。
+- 実測したキーコードは `docs/q25-keys.md`。
 
 ### 入力欄ごとの動き (`EditorPolicy`)
 - パスワード欄 (`TYPE_TEXT_VARIATION_*PASSWORD`): いつも直接入力。学習しない (Core を通さずにアプリに渡す)。

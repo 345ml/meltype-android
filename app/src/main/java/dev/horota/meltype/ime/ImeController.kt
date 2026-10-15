@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package dev.horota.meltype.ime
 
-import android.view.KeyEvent
 import dev.horota.meltype.core.CoreApi
 import dev.horota.meltype.input.BindingAction
 import dev.horota.meltype.input.BindingOptions
@@ -11,6 +10,9 @@ import dev.horota.meltype.input.KeyInput
 import dev.horota.meltype.input.KeyNormalizer
 
 enum class InputMode { JAPANESE, DIRECT, PAUSED, UNAVAILABLE }
+
+/** 候補バーのボタンで入力中の文字を変える先。vk は Core に渡すキー (F7 / F10)。 */
+enum class ConvertTarget(val vk: Int) { KATAKANA(0x76), ALPHANUMERIC(0x79) }
 
 /** 英 / 日の状態の表示 (候補バーの左端)。 */
 interface StatusDisplay {
@@ -37,11 +39,14 @@ class ImeController(
     private var userDirect = false
     private var direct = false
     private var paused = false
-    private var symHeld = false
     /** Meltype が使った KeyDown。対応する KeyUp もアプリに渡さない。 */
     private val consumedDown = mutableSetOf<Int>()
 
     var options: BindingOptions = BindingOptions()
+
+    /** 候補バーを出すか。Meltype を通さない入力欄 (パスワードなど) では出さない。 */
+    val showsBar: Boolean
+        get() = !policy.bypass
 
     val mode: InputMode
         get() = when {
@@ -56,8 +61,6 @@ class ImeController(
         applier.reset()
         applier.inlineReading = !policy.surroundingText
         consumedDown.clear()
-        // Sym を押したまま入力欄が変わると KeyUp が届かないので、ここで忘れる
-        symHeld = false
         // 周りの文字を返せない入力欄では、確定済みの文字を確かめて消せないので、確定し直しをさせない
         core?.setCanDelete(policy.surroundingText)
         core?.setCodeInput(policy.codeInput)
@@ -99,9 +102,7 @@ class ImeController(
     }
 
     fun keyDown(key: KeyInput): Boolean {
-        if (key.keyCode == KeyBindings.Q25_SYM_KEYCODE) symHeld = true
-        val sym = symHeld || key.metaState and KeyEvent.META_SYM_ON != 0
-        val binding = KeyBindings.match(key.keyCode, key.metaState, sym, options)
+        val binding = KeyBindings.match(key.keyCode, key.metaState, options)
         if (binding == BindingAction.TogglePause) return consume(key.keyCode) { togglePause() }
         val api = core ?: return false
         if (paused || policy.bypass) return false
@@ -118,13 +119,17 @@ class ImeController(
         return result.consumed
     }
 
-    fun keyUp(keyCode: Int): Boolean {
-        if (keyCode == KeyBindings.Q25_SYM_KEYCODE) symHeld = false
-        return consumedDown.remove(keyCode)
-    }
+    fun keyUp(keyCode: Int): Boolean = consumedDown.remove(keyCode)
 
     fun selectCandidate(index: Int) {
         core?.selectCandidate(index)?.let(applier::apply)
+    }
+
+    /** 候補バーの「カナ」「英数」。入力中の文字をカタカナ / 英数にする (本家の F7 / F10)。 */
+    fun convert(target: ConvertTarget) {
+        val api = core ?: return
+        if (paused || policy.bypass) return
+        api.handleKey(target.vk, 0, 0, null, null)?.let(applier::apply)
     }
 
     private inline fun consume(keyCode: Int, action: () -> Unit): Boolean {
@@ -141,7 +146,6 @@ class ImeController(
                 val result = if (direct) null else api.roleKey(binding.vk)
                 if (result != null) applier.apply(result) else setDirect(binding.fallbackDirect)
             }
-            is BindingAction.SendVk -> api.handleKey(binding.vk, 0, 0, null, null)?.let(applier::apply)
             BindingAction.TogglePause -> togglePause()
         }
     }

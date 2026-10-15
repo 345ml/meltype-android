@@ -13,9 +13,13 @@ import dev.horota.meltype.core.CompositionView
 
 /**
  * 1 行の候補バー (Q25 の 720×720 の画面でも邪魔にならない高さ)。左端に英 / 日の状態、右に候補。
- * 候補をタップすると onSelect(index)。
+ * 候補をタップすると onSelect(index)。入力中は右端に「カナ」「英数」を出し、タップすると onConvert。
  */
-class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
+class CandidateBarView(
+    context: Context,
+    private val onSelect: (Int) -> Unit,
+    private val onConvert: (ConvertTarget) -> Unit,
+) :
     LinearLayout(context), CandidateDisplay, StatusDisplay {
 
     private val modeLabel = label().apply { setTypeface(typeface, Typeface.BOLD) }
@@ -23,6 +27,12 @@ class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
     /** 入力欄が未確定の文字を描かないときの読み (Termux など)。 */
     private val readingLabel = label().apply { paintFlags = paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG }
     private val list = LinearLayout(context).apply { orientation = HORIZONTAL }
+    private val convertButtons = LinearLayout(context).apply {
+        orientation = HORIZONTAL
+        visibility = GONE
+        addView(button("カナ", ConvertTarget.KATAKANA))
+        addView(button("英数", ConvertTarget.ALPHANUMERIC))
+    }
 
     init {
         orientation = HORIZONTAL
@@ -35,11 +45,13 @@ class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
         addView(HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
             addView(list)
-        })
+        }, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+        addView(convertButtons)
     }
 
     override fun show(view: CompositionView, inlineReading: Boolean) {
         readingLabel.text = if (inlineReading) view.text else ""
+        convertButtons.visibility = if (view.text.isNotEmpty()) VISIBLE else GONE
         list.removeAllViews()
         val items = view.candidates.ifEmpty { view.predictions }
         val selected = if (view.candidates.isNotEmpty()) view.selectedIndex else view.selectedPrediction
@@ -54,6 +66,7 @@ class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
 
     override fun hide() {
         readingLabel.text = ""
+        convertButtons.visibility = GONE
         list.removeAllViews()
     }
 
@@ -69,6 +82,12 @@ class CandidateBarView(context: Context, private val onSelect: (Int) -> Unit) :
     /** null で消す。 */
     fun setWarning(text: String?) {
         warningLabel.text = text.orEmpty()
+    }
+
+    private fun button(text: String, target: ConvertTarget) = label().apply {
+        this.text = text
+        setTextColor(Color.rgb(0x1A, 0x5F, 0xB4))
+        setOnClickListener { onConvert(target) }
     }
 
     private fun label() = TextView(context).apply {

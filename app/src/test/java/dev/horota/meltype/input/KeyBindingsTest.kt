@@ -8,8 +8,8 @@ import org.junit.Test
 
 class KeyBindingsTest {
     private val defaults = BindingOptions()
-    private fun match(keyCode: Int, meta: Int = 0, sym: Boolean = false, options: BindingOptions = defaults) =
-        KeyBindings.match(keyCode, meta, sym, options)
+    private fun match(keyCode: Int, meta: Int = 0, options: BindingOptions = defaults) =
+        KeyBindings.match(keyCode, meta, options)
 
     @Test
     fun zenkakuHankakuToggles() {
@@ -52,13 +52,11 @@ class KeyBindingsTest {
     }
 
     @Test
-    fun symK() {
-        assertEquals(BindingAction.SendVk(0x76), match(KeyEvent.KEYCODE_K, sym = true))
-    }
-
-    @Test
-    fun symE() {
-        assertEquals(BindingAction.SendVk(0x79), match(KeyEvent.KEYCODE_E, sym = true))
+    fun q25SymLettersAreNotBound() {
+        // Q25 の Sym は右 Alt (docs/q25-keys.md)。Key Mapper などが使うこともあるので割り当てない
+        val sym = KeyEvent.META_ALT_ON or KeyEvent.META_ALT_RIGHT_ON
+        assertNull(match(KeyEvent.KEYCODE_K, sym))
+        assertNull(match(KeyEvent.KEYCODE_E, sym))
     }
 
     @Test
