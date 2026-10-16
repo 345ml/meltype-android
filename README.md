@@ -1,4 +1,4 @@
-# Meltype for Android (非公式)
+# Meltype for Android
 
 [Meltype](https://github.com/yksr-melt/Meltype) を Android の物理キーボードで使えるようにした、**非公式の移植版**です。
 
@@ -28,7 +28,7 @@ Meltype は **雪代 / Yukishiro さん ([@yksr-melt](https://github.com/yksr-me
 
 ## なぜ作ったか
 
-作者 ([@345ml](https://github.com/345ml)) は、BlackBerry のような物理 QWERTY キーボードの付いた Android 端末 **Zinwa Q25** を毎日使っています。
+作者 ([@_horotter](https://x.com/_horotter)) は、BlackBerry のような物理 QWERTY キーボードの付いた Android 端末 **Zinwa Q25** を毎日使っています。
 Q25 の小さなキーボードで 半角/全角 を切り替えながら日本語と英語を打つのはつらく、本家 Meltype の「切り替えなくていい」入力を Q25 でも使いたくて作りました。
 そのため、Q25 での使い勝手を最優先にしています (キーの実測: [docs/q25-keys.md](docs/q25-keys.md))。
 
@@ -88,7 +88,7 @@ Meltype
 Copyright (C) 2026 雪代 / Yukishiro (@yksr_melt / @yksr-melt)
 
 Meltype for Android
-Copyright (C) 2026 Keisuke Horota (@345ml)
+Copyright (C) 2026 Keisuke Horota (@345ml / @_horotter)
 ```
 
 同梱しているもの (本家 Meltype・Mozc・.NET ランタイム) とそのライセンスは [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) にまとめています。APK の設定画面の「ライセンス」でも読めます。
