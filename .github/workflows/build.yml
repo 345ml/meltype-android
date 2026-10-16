@@ -4,7 +4,7 @@ name: build
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    tags: ["[0-9]*"]
   pull_request:
 
 jobs:
@@ -58,11 +58,11 @@ jobs:
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest
       - name: Decode keystore
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: echo "${{ secrets.MELTYPE_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
       - name: Build APK
         env:
-          MELTYPE_KEYSTORE: ${{ startsWith(github.ref, 'refs/tags/v') && format('{0}/release.jks', runner.temp) || '' }}
+          MELTYPE_KEYSTORE: ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/release.jks', runner.temp) || '' }}
           MELTYPE_KEYSTORE_PASSWORD: ${{ secrets.MELTYPE_KEYSTORE_PASSWORD }}
           MELTYPE_KEY_ALIAS: ${{ secrets.MELTYPE_KEY_ALIAS }}
           MELTYPE_KEY_PASSWORD: ${{ secrets.MELTYPE_KEY_PASSWORD }}
@@ -70,9 +70,9 @@ jobs:
           if [ -z "$MELTYPE_KEYSTORE" ]; then unset MELTYPE_KEYSTORE; fi
           ./gradlew :app:assembleRelease
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/release/app-release.apk "meltype-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" "meltype-${GITHUB_REF_NAME}.apk" THIRD-PARTY-NOTICES.md build/notices/* --draft --title "Meltype for Android $GITHUB_REF_NAME"
+          gh release create "$GITHUB_REF_NAME" "meltype-${GITHUB_REF_NAME}.apk" THIRD-PARTY-NOTICES.md build/notices/* --draft --title "$GITHUB_REF_NAME"
