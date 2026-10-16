@@ -1,3 +1,5 @@
+<img width="1200" height="480" alt="iXPsG" src="https://github.com/user-attachments/assets/a5a864a1-60e6-4cde-a528-beccdeb8e61f" />
+
 # Meltype for Android
 
 [Meltype](https://github.com/yksr-melt/Meltype) を Android の物理キーボードで使えるようにした、**非公式の移植版**です。
