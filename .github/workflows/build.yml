@@ -35,6 +35,9 @@ jobs:
   app:
     needs: native
     runs-on: ubuntu-24.04
+    permissions:
+      # リリースの下書きを作るため
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
