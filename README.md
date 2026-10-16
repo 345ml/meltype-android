@@ -1,4 +1,4 @@
-<img width="1200" height="480" alt="iXPsG" src="https://github.com/user-attachments/assets/a5a864a1-60e6-4cde-a528-beccdeb8e61f" />
+<img width="1200" height="480" alt="OBK5Y" src="https://github.com/user-attachments/assets/3e379a69-b135-4d6c-8ba6-9a91edc14bf2" />
 
 # Meltype for Android
 
